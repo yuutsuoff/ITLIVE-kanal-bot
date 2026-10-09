@@ -84,7 +84,7 @@ async def list_questions(message: Message):
         await message.answer("<b>📝 Savollar ro'yxati:</b>", parse_mode="HTML")
         for q in questions:
             kb = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🗑 O'chirish", callback_query_data=f"del_q_{q.id}")]
+                [InlineKeyboardButton(text="🗑 O'chirish", callback_data=f"del_q_{q.id}")]
             ])
             text = f"<b>Kategoriya:</b> {q.category}\n<b>Qiyinchilik:</b> {q.difficulty}\n<b>Savol:</b> {q.question_text}"
             await message.answer(text, parse_mode="HTML", reply_markup=kb)
