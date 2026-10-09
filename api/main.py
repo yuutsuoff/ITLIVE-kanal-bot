@@ -189,6 +189,7 @@ async def candidate_detail(request: Request, candidate_id: int, db: AsyncSession
     result = await db.execute(
         select(Candidate)
         .options(
+            selectinload(Candidate.field),
             selectinload(Candidate.evaluation), 
             selectinload(Candidate.answers).selectinload(Answer.question)
         )
