@@ -16,13 +16,59 @@ from db.crud import get_user_by_username, get_fields, create_field, delete_field
 from io import BytesIO
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from datetime import datetime, timedelta
+import asyncio
+from contextlib import asynccontextmanager
+from aiogram import Bot, Dispatcher
+from bot.config import BOT_TOKEN
+from bot.handlers import start, registration, questions, admin
+from db.database import init_db
+from seed import seed
+from seed_admin import seed_admin
 
 load_dotenv()
 
-app = FastAPI(title="ITLIVE HR Admin API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 1. Database tables & seeds
+    try:
+        await init_db()
+        await seed()
+        await seed_admin()
+    except Exception as e:
+        print(f"Database init in lifespan: {e}")
+        
+    # 2. Telegram Bot Polling
+    polling_task = None
+    bot = None
+    if BOT_TOKEN:
+        try:
+            bot = Bot(token=BOT_TOKEN)
+            dp = Dispatcher()
+            dp.include_router(admin.router)
+            dp.include_router(start.router)
+            dp.include_router(registration.router)
+            dp.include_router(questions.router)
+            
+            await bot.delete_webhook(drop_pending_updates=True)
+            polling_task = asyncio.create_task(dp.start_polling(bot))
+            print("Telegram Bot polling started successfully alongside FastAPI!")
+        except Exception as e:
+            print(f"Failed to start bot in lifespan: {e}")
+    else:
+        print("BOT_TOKEN is not set; bot not started.")
+        
+    yield
+    
+    if polling_task:
+        polling_task.cancel()
+    if bot:
+        await bot.session.close()
+
+app = FastAPI(title="ITLIVE HR Admin API", lifespan=lifespan)
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("API_SECRET_KEY", "very-secret-key"))
 
 templates = Jinja2Templates(directory="api/templates")
+
 app.mount("/static", StaticFiles(directory="api/templates"), name="static")
 
 pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
