@@ -3,10 +3,7 @@ import logging
 import os
 import re
 import asyncio
-from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 logger = logging.getLogger(__name__)
 
@@ -36,13 +33,22 @@ if OPENAI_API_KEY and len(OPENAI_API_KEY) > 10:
 
 claude_client = None
 if ANTHROPIC_API_KEY and len(ANTHROPIC_API_KEY) > 10:
-    claude_client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    try:
+        from anthropic import AsyncAnthropic
+        claude_client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    except Exception as e:
+        logger.error(f"Failed to initialize Claude: {e}")
 
 # Track if Gemini is configured
 _gemini_configured = False
 if GEMINI_API_KEY and len(GEMINI_API_KEY) > 10:
     try:
+        import google.generativeai as genai
         genai.configure(api_key=GEMINI_API_KEY)
+        _gemini_configured = True
+    except Exception as e:
+        logger.error(f"Failed to configure Gemini: {e}")
+
         _gemini_configured = True
     except Exception as e:
         logger.error(f"Failed to configure Gemini: {e}")
