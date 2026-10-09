@@ -29,40 +29,48 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Database tables & seeds
-    try:
-        await init_db()
-        await seed()
-        await seed_admin()
-    except Exception as e:
-        print(f"Database init in lifespan: {e}")
-        
-    # 2. Telegram Bot Polling
-    polling_task = None
-    bot = None
-    if BOT_TOKEN:
+    bot_ref = {}
+    
+    async def start_services():
+        # 1. Database tables & seeds
         try:
-            bot = Bot(token=BOT_TOKEN)
-            dp = Dispatcher()
-            dp.include_router(admin.router)
-            dp.include_router(start.router)
-            dp.include_router(registration.router)
-            dp.include_router(questions.router)
-            
-            await bot.delete_webhook(drop_pending_updates=True)
-            polling_task = asyncio.create_task(dp.start_polling(bot))
-            print("Telegram Bot polling started successfully alongside FastAPI!")
+            await init_db()
+            await seed()
+            await seed_admin()
         except Exception as e:
-            print(f"Failed to start bot in lifespan: {e}")
-    else:
-        print("BOT_TOKEN is not set; bot not started.")
-        
+            print(f"Database init in lifespan: {e}")
+            
+        # 2. Telegram Bot Polling
+        if BOT_TOKEN:
+            try:
+                bot = Bot(token=BOT_TOKEN)
+                bot_ref["bot"] = bot
+                dp = Dispatcher()
+                dp.include_router(admin.router)
+                dp.include_router(start.router)
+                dp.include_router(registration.router)
+                dp.include_router(questions.router)
+                
+                await bot.delete_webhook(drop_pending_updates=True)
+                print("Telegram Bot polling started successfully alongside FastAPI!")
+                await dp.start_polling(bot)
+            except Exception as e:
+                print(f"Failed to start bot in lifespan: {e}")
+        else:
+            print("BOT_TOKEN is not set; bot not started.")
+
+    bg_task = asyncio.create_task(start_services())
+    
+    # Yield immediately so Uvicorn binds port instantly and Render detects it!
     yield
     
-    if polling_task:
-        polling_task.cancel()
-    if bot:
-        await bot.session.close()
+    bg_task.cancel()
+    if "bot" in bot_ref:
+        try:
+            await bot_ref["bot"].session.close()
+        except Exception:
+            pass
+
 
 app = FastAPI(title="ITLIVE HR Admin API", lifespan=lifespan)
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("API_SECRET_KEY", "very-secret-key"))
