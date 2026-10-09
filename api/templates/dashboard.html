@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ITLIVE HR</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <a href="/" class="logo">ITLIVE HR</a>
+        <div class="user-info">
+            <span style="font-weight: 500; color: var(--text-muted);">{{ user }}</span>
+            <a href="/logout" class="logout-btn">Chiqish</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>🚀 Dashboard</h1>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">Jami nomzodlar</span>
+                <span class="stat-value">{{ total }}</span>
+            </div>
+            <div class="stat-card hired">
+                <span class="stat-label">Tavsiya: HIRED</span>
+                <span class="stat-value">{{ hired }}</span>
+            </div>
+            <div class="stat-card rejected">
+                <span class="stat-label">Tavsiya: REJECTED</span>
+                <span class="stat-value">{{ rejected }}</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Harakatlar</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Tizimni boshqarish va nomzodlar bilan ishlash.</p>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="/candidates" class="btn">Nomzodlarni ko'rish</a>
+                <a href="/fields" class="btn secondary">Sohalarni boshqarish</a>
+                <a href="/export" class="btn success">📊 Excel Hisobot</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ candidate.first_name }} {{ candidate.last_name }} - ITLIVE HR</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .info-label { color: var(--text-muted); font-weight: 500; }
+        .info-value { font-weight: 600; }
+
+        .score-box {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            background: var(--bg);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .score-circle {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+        }
+        .sub-scores {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            flex-grow: 1;
+        }
+        .sub-score-item { text-align: center; }
+        .sub-score-val { display: block; font-weight: 700; font-size: 1.25rem; }
+        .sub-score-lab { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+
+        .qa-item {
+            margin-bottom: 1.5rem;
+            padding-left: 1rem;
+            border-left: 3px solid var(--border);
+        }
+        .question { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+        .answer { font-weight: 500; }
+
+        .recommendation-banner {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-top: 1.5rem;
+        }
+        .rec-hire { background: #dcfce7; color: #166534; border: 2px solid #22c55e; }
+        .rec-maybe { background: #fef9c3; color: #854d0e; border: 2px solid #eab308; }
+        .rec-reject { background: #fee2e2; color: #991b1b; border: 2px solid #ef4444; }
+
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/" class="logo">ITLIVE HR</a>
+        <div class="user-info">
+            <span style="font-weight: 500; color: var(--text-muted);">{{ user }}</span>
+            <a href="/logout" class="logout-btn">Chiqish</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1>👤 {{ candidate.first_name }} {{ candidate.last_name }}</h1>
+            <a href="/candidates" style="color: var(--primary); text-decoration: none; font-weight: 500;">← Orqaga</a>
+        </div>
+
+        <div class="grid">
+            <div class="left-col">
+                <div class="card">
+                    <h3 class="card-title">📝 Nomzod Javoblari</h3>
+                    {% if candidate.answers %}
+                        {% for ans in candidate.answers %}
+                        <div class="qa-item">
+                            <div class="question">Savol: {{ ans.question.question_text if ans.question else "Maxsus savol" }}</div>
+                            <div class="answer">{{ ans.answer_text }}</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Javoblar hali mavjud emas.</p>
+                    {% endif %}
+                </div>
+
+                {% if candidate.evaluation %}
+                <div class="card">
+                    <h3 class="card-title">🤖 AI Tahlili</h3>
+                    <div class="score-box">
+                        <div class="score-circle">{{ candidate.evaluation.overall_score|round|int }}</div>
+                        <div class="sub-scores">
+                            <div class="sub-score-item">
+                                <span class="sub-score-val">{{ candidate.evaluation.logic_score|round|int if candidate.evaluation.logic_score is not none else '0' }}</span>
+                                <span class="sub-score-lab">Mantiq</span>
+                            </div>
+                            <div class="sub-score-item">
+                                <span class="sub-score-val">{{ candidate.evaluation.technical_score|round|int if candidate.evaluation.technical_score is not none else '0' }}</span>
+                                <span class="sub-score-lab">Texnik</span>
+                            </div>
+                            <div class="sub-score-item">
+                                <span class="sub-score-val">{{ candidate.evaluation.clarity_score|round|int if candidate.evaluation.clarity_score is not none else '0' }}</span>
+                                <span class="sub-score-lab">Ifoda</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="evaluation-box">
+                        <strong>AI Xulosasi:</strong>
+                        <p style="margin-top: 0.5rem;">{{ candidate.evaluation.ai_summary }}</p>
+                    </div>
+                    <div class="recommendation-banner rec-{{ candidate.evaluation.recommendation }}">
+                        TAVSIYA: {{ candidate.evaluation.recommendation|upper }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="right-col">
+                <div class="card">
+                    <h3 class="card-title">📋 Ma'lumotlar</h3>
+                    <div class="info-item">
+                        <span class="info-label">Soha:</span>
+                        <span class="info-value" style="color: var(--primary);">{{ candidate.field.name if candidate.field else 'Noma\'lum' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Telefon:</span>
+                        <span class="info-value">{{ candidate.phone_number }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Yosh:</span>
+                        <span class="info-value">{{ candidate.age }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Manzil:</span>
+                        <span class="info-value">{{ candidate.location }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ish vaqti:</span>
+                        <span class="info-value">{{ candidate.hours_per_day }} s/kun</span>
+                    </div>
+                    <div class="info-item" style="border: none; margin-top: 1rem;">
+                        <span class="info-label">Holat:</span>
+                        <span class="badge" style="background: #e2e8f0; color: #475569;">{{ candidate.status }}</span>
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        <h4 style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">Holatni o'zgartirish:</h4>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <form action="/candidates/{{ candidate.id }}/status" method="POST">
+                                <input type="hidden" name="status" value="meeting_scheduled">
+                                <button type="submit" class="btn secondary" style="width: 100%;">📅 Uchrashuv belgilandi</button>
+                            </form>
+                            <form action="/candidates/{{ candidate.id }}/status" method="POST">
+                                <input type="hidden" name="status" value="hired">
+                                <button type="submit" class="btn success" style="width: 100%;">✅ Ishga olindi</button>
+                            </form>
+                            <form action="/candidates/{{ candidate.id }}/status" method="POST">
+                                <input type="hidden" name="status" value="rejected">
+                                <button type="submit" class="btn" style="width: 100%; background: var(--danger);">❌ Rad etildi</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sohalar - ITLIVE HR</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <a href="/" class="logo">ITLIVE HR</a>
+        <div class="user-info">
+            <span style="font-weight: 500; color: var(--text-muted);">{{ user }}</span>
+            <a href="/logout" class="logout-btn">Chiqish</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1>💼 Ish sohalari (Kategoriyalar)</h1>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 500;">← Orqaga</a>
+        </div>
+
+        <div class="grid" style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+            <div class="card">
+                <h3>Yangi soha qo'shish</h3>
+                <form action="/fields" method="POST" style="margin-top: 1.5rem;">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: var(--text-muted);">Soha nomi:</label>
+                        <input type="text" name="name" required placeholder="Masalan: Grafika Dizayneri" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem;">
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Qo'shish</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Mavjud sohalar</h3>
+                <div style="margin-top: 1.5rem;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nomi</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Amal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in fields %}
+                            <tr>
+                                <td style="font-weight: 600;">{{ f.name }}</td>
+                                <td>
+                                    <span class="badge" style="background: #dcfce7; color: #166534;">Faol</span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <form action="/fields/{{ f.id }}/delete" method="POST" style="display: inline;">
+                                        <button type="submit" style="background: none; border: none; color: var(--danger); cursor: pointer; font-weight: 500;">O'chirish</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not fields %}
+                            <tr>
+                                <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">Sohalar mavjud emas.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
