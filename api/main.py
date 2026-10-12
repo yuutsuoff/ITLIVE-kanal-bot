@@ -41,9 +41,10 @@ async def lifespan(app: FastAPI):
             print(f"Database init in lifespan: {e}")
             
         # 2. Telegram Bot Polling
-        if BOT_TOKEN:
+        token = (BOT_TOKEN or os.getenv("BOT_TOKEN") or "").strip()
+        if token:
             try:
-                bot = Bot(token=BOT_TOKEN)
+                bot = Bot(token=token)
                 bot_ref["bot"] = bot
                 dp = Dispatcher()
                 dp.include_router(admin.router)
@@ -51,15 +52,25 @@ async def lifespan(app: FastAPI):
                 dp.include_router(registration.router)
                 dp.include_router(questions.router)
                 
-                await bot.delete_webhook(drop_pending_updates=True)
-                print("Telegram Bot polling started successfully alongside FastAPI!")
-                await dp.start_polling(bot)
+                await bot.delete_webhook(drop_pending_updates=False)
+                print("Telegram Bot polling starting alongside FastAPI...")
+                while True:
+                    try:
+                        print("Telegram Bot polling active and listening for updates...")
+                        await dp.start_polling(bot, handle_signals=False)
+                    except asyncio.CancelledError:
+                        print("Bot polling task cancelled.")
+                        break
+                    except Exception as poll_err:
+                        print(f"Bot polling temporary error: {poll_err}. Reconnecting in 5s...")
+                        await asyncio.sleep(5)
             except Exception as e:
                 print(f"Failed to start bot in lifespan: {e}")
         else:
             print("BOT_TOKEN is not set; bot not started.")
 
     bg_task = asyncio.create_task(start_services())
+    app.state.bot_task = bg_task  # Prevent garbage collection!
     
     # Yield immediately so Uvicorn binds port instantly and Render detects it!
     yield

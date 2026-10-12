@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 
 async def main():
     await init_db()
-    bot = Bot(token=BOT_TOKEN)
+    bot = Bot(token=BOT_TOKEN.strip())
     dp = Dispatcher()
 
 
